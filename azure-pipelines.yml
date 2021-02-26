@@ -1,0 +1,90 @@
+# Node.js with Angular
+# Build a Node.js project that uses Angular.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+variables:
+- name: tag
+  value: bar-$(Rev.r)
+# Install SSH key needed to download terraform modules from repo
+- name: known_host
+  value: '###REPLACE WITH FINGERPRINT OF USER WITH ACCESS TO TERRAFORM MODULES###'
+- name: ssh_public_key
+  value: '###REPLACE WITH PUBKEY OF USER WITH ACCESS TO TERRAFORM MODULES'
+
+stages:
+- stage: ensureECS
+  jobs:
+  - job: ensureECS
+    steps:
+    - task: InstallSSHKey@0
+      inputs:
+        knownHostsEntry: $(known_host)
+        sshPublicKey: $(ssh_public_key)
+        sshKeySecureFile: id_rsa
+    # Install terraform on agent
+    - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+      displayName: 'Use Terraform latest'
+    - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
+      displayName: 'terraform init'
+      inputs:
+        command: init
+        secureVarsFile: aws.env
+        backendType: selfConfigured
+        allowTelemetryCollection: false
+    # Apply services.tf
+    - task: charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-cli.TerraformCLI@0
+      displayName: 'terraform apply'
+      inputs:
+        command: apply
+        secureVarsFile: aws.env
+- stage: buildAndPush
+  jobs:
+  - job: buildAndPush
+    steps:
+    # See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/docker?view=azure-devops
+    - task: Docker@0
+      displayName: 'Build docker image'
+    # Push docker image to ECR
+    - task: AmazonWebServices.aws-vsts-tools.ECRPushImage.ECRPushImage@1
+      displayName: 'Push docker image with BuildId'
+      inputs:
+        # Use the service-connections named 'aws'
+        awsCredentials: aws
+        regionName: 'eu-central-1'
+        sourceImageName: '$(Build.Repository.Name)'
+        sourceImageTag: '$(Build.BuildId)'
+        repositoryName: 'bar'
+        pushTag: '$(Build.BuildId)'
+    # Also Push to latest
+    - task: AmazonWebServices.aws-vsts-tools.ECRPushImage.ECRPushImage@1
+      displayName: 'Push docker image latest'
+      inputs:
+        awsCredentials: aws
+        regionName: 'eu-central-1'
+        sourceImageName: '$(Build.Repository.Name)'
+        sourceImageTag: '$(Build.BuildId)'
+        repositoryName: 'bar'
+- stage: deploy
+  jobs:
+  - job: deploy
+    steps:
+    # Update ECS Service to use new tag (latest)
+    - task: AmazonWebServices.aws-vsts-tools.AWSCLI.AWSCLI@1
+      displayName: 'Deploy to Fargate (update service)'
+      inputs:
+        awsCredentials: aws
+        regionName: 'eu-central-1'
+        awsCommand: ecs
+        awsSubCommand: 'update-service'
+        awsArguments: '--cluster foo --service bar-service --force-new-deployment'
+        failOnStandardError: false
+  
