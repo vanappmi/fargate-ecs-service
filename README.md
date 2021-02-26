@@ -7,7 +7,7 @@ This can be used as a template when deploying new services.
 
 ## Functionality
 - Terraform S3 remote backend
-- AWS ECS resource creation (ECS Service, Task Definition, ALB, Logs)
+- AWS ECS resource creation (ECS Service, Task Definition, ALB, Service Discovery, Logs)
 - Azure DevOps example pipeline (azure-pipelines.yml)
 
 ## Requirements
