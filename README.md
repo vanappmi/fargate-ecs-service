@@ -12,7 +12,12 @@ This can be used as a template when deploying new services.
 
 ## Requirements
 
-No requirements.
+[Terraform](https://www.terraform.io/downloads.html) installed
+AWS Credentials
+
+## Usage
+terraform init
+terraform apply
 
 ## Providers
 
