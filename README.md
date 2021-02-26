@@ -17,6 +17,7 @@ AWS Credentials
 
 ## Usage
 `terraform init`
+
 `terraform apply`
 
 ## Providers
