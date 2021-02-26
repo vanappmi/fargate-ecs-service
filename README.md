@@ -16,8 +16,8 @@ This can be used as a template when deploying new services.
 AWS Credentials
 
 ## Usage
-terraform init
-terraform apply
+`terraform init`
+`terraform apply`
 
 ## Providers
 
