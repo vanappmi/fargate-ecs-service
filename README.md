@@ -13,7 +13,8 @@ This can be used as a template when deploying new services.
 ## Requirements
 
 [Terraform](https://www.terraform.io/downloads.html) installed
-AWS Credentials
+
+AWS Credentials [set up](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html)
 
 ## Usage
 `terraform init`
