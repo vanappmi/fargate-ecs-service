@@ -4,6 +4,12 @@ This is an example how to deploy the angularJS service "bar"
 to cluster "foo" that's living in the application namespace "app".
 
 This can be used as a template when deploying new services.
+
+## Functionality
+- Terraform S3 remote backend
+- AWS ECS resource creation (ECS Service, Task Definition, ALB, Logs)
+- Azure DevOps example pipeline (azure-pipelines.yml)
+
 ## Requirements
 
 No requirements.
